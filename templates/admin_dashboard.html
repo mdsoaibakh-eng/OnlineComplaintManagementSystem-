@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Admin Dashboard</h2>
+    <div>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">All</a>
+        <a href="{{ url_for('admin_dashboard', status='Pending') }}" class="btn btn-outline-warning btn-sm">Pending</a>
+        <a href="{{ url_for('admin_dashboard', status='In-progress') }}"
+            class="btn btn-outline-info btn-sm">In-progress</a>
+        <a href="{{ url_for('admin_dashboard', status='Resolved') }}"
+            class="btn btn-outline-success btn-sm">Resolved</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Category</th>
+                        <th>Title</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for complaint in complaints %}
+                    <tr>
+                        <td>{{ complaint.id }}</td>
+                        <td>{{ complaint.user.name }}<br><small class="text-muted">{{ complaint.user.email }}</small>
+                        </td>
+                        <td>{{ complaint.category.name }}</td>
+                        <td>{{ complaint.title }}</td>
+                        <td>{{ complaint.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if complaint.status == 'Pending' %}bg-warning text-dark
+                                {% elif complaint.status == 'In-progress' %}bg-info text-dark
+                                {% elif complaint.status == 'Resolved' %}bg-success
+                                {% elif complaint.status == 'Rejected' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ complaint.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin_complaint_detail', complaint_id=complaint.id) }}"
+                                class="btn btn-sm btn-primary">Manage</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">No complaints found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

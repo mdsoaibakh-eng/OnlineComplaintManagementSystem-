@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Complaints</h2>
+    <a href="{{ url_for('file_complaint') }}" class="btn btn-primary">+ File New Complaint</a>
+</div>
+
+{% if complaints %}
+<div class="table-responsive">
+    <table class="table table-hover table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for complaint in complaints %}
+            <tr>
+                <td>#{{ complaint.id }}</td>
+                <td>{{ complaint.title }}</td>
+                <td>{{ complaint.category.name }}</td>
+                <td>{{ complaint.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <span class="badge 
+                        {% if complaint.status == 'Pending' %}bg-warning text-dark
+                        {% elif complaint.status == 'In-progress' %}bg-info text-dark
+                        {% elif complaint.status == 'Resolved' %}bg-success
+                        {% elif complaint.status == 'Rejected' %}bg-danger
+                        {% else %}bg-secondary{% endif %}">
+                        {{ complaint.status }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('complaint_detail', complaint_id=complaint.id) }}"
+                        class="btn btn-sm btn-outline-primary">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    You haven't filed any complaints yet.
+</div>
+{% endif %}
+{% endblock %}

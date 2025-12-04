@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Complaint System{% endblock %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">Online Complaint Registration System</h1>
+        <p class="col-md-8 fs-4">Streamlining the process of lodging and resolving complaints. A centralized platform
+            for students and staff to voice their concerns and track resolutions.</p>
+        {% if not session.get('user_id') and not session.get('admin_id') %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('user_register') }}" role="button">Register Now</a>
+        <a class="btn btn-outline-secondary btn-lg" href="{{ url_for('user_login') }}" role="button">Login</a>
+        {% elif session.get('user_id') %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('file_complaint') }}" role="button">File a Complaint</a>
+        {% else %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('admin_dashboard') }}" role="button">Go to Dashboard</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row align-items-md-stretch">
+    <div class="col-md-6">
+        <div class="h-100 p-5 text-white bg-dark rounded-3">
+            <h2>For Users</h2>
+            <p>Easily file complaints regarding infrastructure, academics, or other facilities. Track the status of your
+                complaints in real-time.</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="h-100 p-5 bg-light border rounded-3">
+            <h2>For Administrators</h2>
+            <p>Efficiently manage and resolve complaints. Update status, add remarks, and ensure a transparent
+                resolution process.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

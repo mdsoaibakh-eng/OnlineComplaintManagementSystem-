@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Complaint #{{ complaint.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Complaint Details</h4>
+                <span class="badge 
+                    {% if complaint.status == 'Pending' %}bg-warning text-dark
+                    {% elif complaint.status == 'In-progress' %}bg-info text-dark
+                    {% elif complaint.status == 'Resolved' %}bg-success
+                    {% elif complaint.status == 'Rejected' %}bg-danger
+                    {% else %}bg-secondary{% endif %}">
+                    {{ complaint.status }}
+                </span>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ complaint.title }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Category: {{ complaint.category.name }}</h6>
+                <p class="card-text mt-3">{{ complaint.description|nl2br }}</p>
+                <hr>
+                <small class="text-muted">Filed on: {{ complaint.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Status History</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for log in complaint.logs %}
+                <li class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ log.new_status }}</h6>
+                        <small class="text-muted">{{ log.timestamp.strftime('%m-%d %H:%M') }}</small>
+                    </div>
+                    {% if log.comments %}
+                    <p class="mb-1 small">{{ log.comments }}</p>
+                    {% endif %}
+                    {% if log.old_status %}
+                    <small class="text-muted">Changed from {{ log.old_status }}</small>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

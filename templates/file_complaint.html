@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}File Complaint{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">File a New Complaint</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="" selected disabled>Select a category...</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Subject / Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required
+                            placeholder="Brief summary of the issue">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Detailed Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required
+                            placeholder="Please provide full details..."></textarea>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Submit Complaint</button>
+                        <a href="{{ url_for('user_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

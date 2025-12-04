@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Complaint #{{ complaint.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Complaint Details</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="fw-bold">User:</label>
+                    <span>{{ complaint.user.name }} ({{ complaint.user.email }})</span>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Category:</label>
+                    <span>{{ complaint.category.name }}</span>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Subject:</label>
+                    <h5>{{ complaint.title }}</h5>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Description:</label>
+                    <p class="bg-light p-3 rounded border">{{ complaint.description|nl2br }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Update Status</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">New Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="Pending" {% if complaint.status=='Pending' %}selected{% endif %}>Pending
+                            </option>
+                            <option value="In-progress" {% if complaint.status=='In-progress' %}selected{% endif %}>
+                                In-progress</option>
+                            <option value="Resolved" {% if complaint.status=='Resolved' %}selected{% endif %}>Resolved
+                            </option>
+                            <option value="Rejected" {% if complaint.status=='Rejected' %}selected{% endif %}>Rejected
+                            </option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comments" class="form-label">Remarks / Comments</label>
+                        <textarea class="form-control" id="comments" name="comments" rows="3"
+                            placeholder="Add a note about this update..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">History</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for log in complaint.logs %}
+                <li class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ log.new_status }}</h6>
+                        <small class="text-muted">{{ log.timestamp.strftime('%m-%d %H:%M') }}</small>
+                    </div>
+                    {% if log.comments %}
+                    <p class="mb-1 small">{{ log.comments }}</p>
+                    {% endif %}
+                    {% if log.old_status %}
+                    <small class="text-muted">Changed from {{ log.old_status }}</small>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
