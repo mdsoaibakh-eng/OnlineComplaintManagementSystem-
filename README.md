@@ -79,7 +79,7 @@ How to Run
 pip install -r requirements.txt
 
 2. Run the application
-python app.py
+python app.py  / flask run
 
 3. Access in browser
 http://127.0.0.1:5000
