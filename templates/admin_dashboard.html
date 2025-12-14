@@ -27,6 +27,7 @@
                         <th>Title</th>
                         <th>Date</th>
                         <th>Status</th>
+                        <th>Assigned To</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -49,6 +50,7 @@
                                 {{ complaint.status }}
                             </span>
                         </td>
+                        <td>{{ complaint.assigned_to or 'Unassigned' }}</td>
                         <td>
                             <a href="{{ url_for('admin_complaint_detail', complaint_id=complaint.id) }}"
                                 class="btn btn-sm btn-primary">Manage</a>

@@ -26,34 +26,50 @@
                     <label class="fw-bold">Description:</label>
                     <p class="bg-light p-3 rounded border">{{ complaint.description|nl2br }}</p>
                 </div>
+                {% if complaint.attachment %}
+                <div class="mb-3">
+                    <label class="fw-bold">Attachment:</label>
+                    <div>
+                        <a href="{{ url_for('static', filename='uploads/' + complaint.attachment) }}" target="_blank"
+                            class="btn btn-sm btn-outline-primary">View Attachment</a>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
 
         <div class="card">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Update Status</h5>
+                <h5 class="mb-0">Update Complaint</h5>
             </div>
             <div class="card-body">
                 <form method="POST">
-                    <div class="mb-3">
-                        <label for="status" class="form-label">New Status</label>
-                        <select class="form-select" id="status" name="status">
-                            <option value="Pending" {% if complaint.status=='Pending' %}selected{% endif %}>Pending
-                            </option>
-                            <option value="In-progress" {% if complaint.status=='In-progress' %}selected{% endif %}>
-                                In-progress</option>
-                            <option value="Resolved" {% if complaint.status=='Resolved' %}selected{% endif %}>Resolved
-                            </option>
-                            <option value="Rejected" {% if complaint.status=='Rejected' %}selected{% endif %}>Rejected
-                            </option>
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="Pending" {% if complaint.status=='Pending' %}selected{% endif %}>Pending
+                                </option>
+                                <option value="In-progress" {% if complaint.status=='In-progress' %}selected{% endif %}>
+                                    In-progress</option>
+                                <option value="Resolved" {% if complaint.status=='Resolved' %}selected{% endif %}>
+                                    Resolved</option>
+                                <option value="Rejected" {% if complaint.status=='Rejected' %}selected{% endif %}>
+                                    Rejected</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="assigned_to" class="form-label">Assign To (Dept/Person)</label>
+                            <input type="text" class="form-control" id="assigned_to" name="assigned_to"
+                                value="{{ complaint.assigned_to or '' }}" placeholder="e.g. IT Dept">
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="comments" class="form-label">Remarks / Comments</label>
                         <textarea class="form-control" id="comments" name="comments" rows="3"
                             placeholder="Add a note about this update..."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary">Update Status</button>
+                    <button type="submit" class="btn btn-primary">Update Complaint</button>
                     <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
                 </form>
             </div>

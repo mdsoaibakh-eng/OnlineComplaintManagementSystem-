@@ -10,7 +10,7 @@
                 <h4 class="mb-0">File a New Complaint</h4>
             </div>
             <div class="card-body">
-                <form method="POST">
+                <form method="POST" action="{{ url_for('file_complaint') }}" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="category" class="form-label">Category</label>
                         <select class="form-select" id="category" name="category" required>
@@ -29,6 +29,10 @@
                         <label for="description" class="form-label">Detailed Description</label>
                         <textarea class="form-control" id="description" name="description" rows="5" required
                             placeholder="Please provide full details..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="attachment" class="form-label">Attachment (Optional)</label>
+                        <input class="form-control" type="file" id="attachment" name="attachment">
                     </div>
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary">Submit Complaint</button>

@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from models import db, Admin, User, Category, Complaint, StatusLog
 from markupsafe import Markup, escape
 from datetime import datetime
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
@@ -17,6 +18,12 @@ def admin_login_required(f):
         if not session.get("admin_id"):
             flash("Please log in as admin.", "error")
             return redirect(url_for("admin_login"))
+        # Verify admin exists in DB
+        admin = Admin.query.get(session["admin_id"])
+        if not admin:
+            session.pop("admin_id", None)
+            flash("Session invalid. Please login again.", "error")
+            return redirect(url_for("admin_login"))
         return f(*args, **kwargs)
     return wrapper
 
@@ -26,6 +33,13 @@ def user_login_required(f):
     def wrapper(*args, **kwargs):
         if not session.get("user_id"):
             flash("Please log in to access this page.", "error")
+            return redirect(url_for("user_login"))
+        # Verify user exists in DB
+        user = User.query.get(session["user_id"])
+        if not user:
+            session.pop("user_id", None)
+            session.pop("user_name", None)
+            flash("Session invalid. Please login again.", "error")
             return redirect(url_for("user_login"))
         return f(*args, **kwargs)
     return wrapper
@@ -38,6 +52,8 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     db.init_app(app)
 
@@ -113,26 +129,81 @@ def create_app():
             complaints = Complaint.query.order_by(Complaint.created_at.desc()).all()
         return render_template("admin_dashboard.html", complaints=complaints)
 
+    @app.route("/admin/reports")
+    @admin_login_required
+    def admin_reports():
+        total = Complaint.query.count()
+        pending = Complaint.query.filter_by(status='Pending').count()
+        in_progress = Complaint.query.filter_by(status='In-progress').count()
+        resolved = Complaint.query.filter_by(status='Resolved').count()
+        rejected = Complaint.query.filter_by(status='Rejected').count()
+        
+        # Simple category stats
+        categories = Category.query.all()
+        cat_stats = []
+        for cat in categories:
+            count = Complaint.query.filter_by(category_id=cat.id).count()
+            cat_stats.append({'name': cat.name, 'count': count})
+            
+        return render_template("admin_reports.html", 
+                               total=total, 
+                               pending=pending, 
+                               in_progress=in_progress, 
+                               resolved=resolved, 
+                               rejected=rejected,
+                               cat_stats=cat_stats)
+
     @app.route("/admin/complaint/<int:complaint_id>", methods=["GET", "POST"])
     @admin_login_required
     def admin_complaint_detail(complaint_id):
         complaint = Complaint.query.get_or_404(complaint_id)
         if request.method == "POST":
             new_status = request.form.get("status")
+            assigned_to = request.form.get("assigned_to")
             comments = request.form.get("comments")
             
+            changes = []
             if new_status and new_status != complaint.status:
                 log = StatusLog(
                     complaint_id=complaint.id,
                     old_status=complaint.status,
                     new_status=new_status,
-                    comments=comments
+                    comments=f"Status changed. {comments}"
                 )
                 complaint.status = new_status
                 db.session.add(log)
+                changes.append("Status updated")
+
+            if assigned_to and assigned_to != complaint.assigned_to:
+                complaint.assigned_to = assigned_to
+                # Log assignment change
+                log = StatusLog(
+                    complaint_id=complaint.id,
+                    old_status=complaint.status,
+                    new_status=complaint.status,
+                    comments=f"Assigned to: {assigned_to}. {comments}" if not changes else f"Assigned to {assigned_to}"
+                )
+                db.session.add(log)
+                changes.append("Assignment updated")
+            
+            if not changes and comments:
+                 # Just a comment
+                log = StatusLog(
+                    complaint_id=complaint.id,
+                    old_status=complaint.status,
+                    new_status=complaint.status,
+                    comments=comments
+                )
+                db.session.add(log)
+                changes.append("Comment added")
+
+            if changes:
                 db.session.commit()
-                flash("Status updated successfully.", "success")
-                return redirect(url_for("admin_complaint_detail", complaint_id=complaint.id))
+                flash("Complaint updated successfully.", "success")
+            else:
+                flash("No changes made.", "info")
+
+            return redirect(url_for("admin_complaint_detail", complaint_id=complaint.id))
         
         return render_template("admin_complaint_detail.html", complaint=complaint)
 
@@ -182,6 +253,37 @@ def create_app():
         flash("Logged out.", "info")
         return redirect(url_for("index"))
 
+    @app.route("/user/profile", methods=["GET", "POST"])
+    @user_login_required
+    def user_profile():
+        user = User.query.get(session["user_id"])
+        if request.method == "POST":
+            name = request.form.get("name").strip()
+            email = request.form.get("email").strip()
+            password = request.form.get("password").strip()
+
+            if not name or not email:
+                flash("Name and Email are required.", "error")
+                return redirect(url_for("user_profile"))
+
+            user.name = name
+            # Check if email is taken by another user
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user and existing_user.id != user.id:
+                flash("Email already in use.", "error")
+                return redirect(url_for("user_profile"))
+            
+            user.email = email
+            if password:
+                user.set_password(password)
+            
+            db.session.commit()
+            session["user_name"] = user.name
+            flash("Profile updated successfully.", "success")
+            return redirect(url_for("user_profile"))
+        
+        return render_template("user_profile.html", user=user)
+
     @app.route("/user/dashboard")
     @user_login_required
     def user_dashboard():
@@ -196,6 +298,12 @@ def create_app():
             category_id = request.form.get("category")
             title = request.form.get("title")
             description = request.form.get("description")
+            file = request.files.get("attachment")
+            
+            filename = None
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             
             if not title or not description:
                 flash("Please fill in all fields.", "error")
@@ -205,7 +313,8 @@ def create_app():
                 user_id=session["user_id"],
                 category_id=category_id,
                 title=title,
-                description=description
+                description=description,
+                attachment=filename
             )
             db.session.add(complaint)
             db.session.commit()

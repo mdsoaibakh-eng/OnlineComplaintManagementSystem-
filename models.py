@@ -51,6 +51,8 @@ class Complaint(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False)
+    attachment = db.Column(db.String(255), nullable=True)
+    assigned_to = db.Column(db.String(100), nullable=True) # Department or Admin Name
     status = db.Column(db.String(50), default='Pending') # Pending, In-progress, Resolved, Rejected
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
